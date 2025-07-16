@@ -19,7 +19,11 @@
 /// \file FunctionsMath_ker.cu \brief Implements basic/general math functions for the GPU executions.
 
 #include "TypesDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 namespace cumath{
 

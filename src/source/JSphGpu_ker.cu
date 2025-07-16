@@ -23,7 +23,11 @@
 #include "FunctionsCuda.h"
 #include "JLog2.h"
 #include <cfloat>
+#ifdef USE_HIP
+#include "cuda_math_constants.h"
+#else
 #include <math_constants.h>
+#endif
 //:#include "JDgKerPrint.h"
 //:#include "JDgKerPrint_ker.h"
 

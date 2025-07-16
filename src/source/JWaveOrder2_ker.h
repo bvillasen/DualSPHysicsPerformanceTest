@@ -28,7 +28,11 @@
 #ifndef _JWaveOrder2_ker_
 #define _JWaveOrder2_ker_
 
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 #define WAVEBSIZE 256
 

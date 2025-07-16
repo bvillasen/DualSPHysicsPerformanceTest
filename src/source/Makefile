@@ -15,6 +15,15 @@ LIBS_DIRECTORIES=-L./
 EXECNAME=DualSPHysics_linux64
 EXECS_DIRECTORY=../../bin/linux
 
+# If the BUILD_AMD environment variable is defined, build for HIP.
+ifeq ($(origin BUILD_AMD), environment)
+  $(info BUILD_AMD is defined in the environment, building for HIP...)
+  # Build for HIP instead of CUDA
+  ENABLE_HIP=YES
+else
+  ENABLE_HIP=NO
+endif
+
 # -std=c++0x ---> Used to avoid errors for calls to enums
 ifeq ($(USE_DEBUG), YES)
   CCFLAGS=-c -O0 -g -Wall -fopenmp -D_WITHGPU -std=c++0x
@@ -47,46 +56,61 @@ ifeq ($(COMPILE_MOORDYN), NO)
 endif
 
 #=============== CUDA selection ===============
-CUDAVER=11
+CUDAVER=12
 
 ifneq ($(CUDA),)
   CUDAVER=$(CUDA)
 endif
 
-#=============== CUDA toolkit directory (make appropriate for local CUDA installation) ===============
-ifeq ($(CUDAVER),00)
-  DIRTOOLKIT=/usr/local/cuda
-endif
-ifeq ($(CUDAVER),92)
-  DIRTOOLKIT=/exports/opt/NVIDIA/cuda-9.2
-endif
-ifeq ($(CUDAVER),11)
-  DIRTOOLKIT=/exports/opt/NVIDIA/cuda-11.7
-endif
-ifeq ($(CUDAVER),12)
-  DIRTOOLKIT=/exports/opt/NVIDIA/cuda-12.8
-endif
-
-#=============== Select GPU architectures ===============
-ifeq ($(CUDAVER),92)
-  # module load cuda/9.2
-  GENCODE:=$(GENCODE) -gencode=arch=compute_30,code=\"sm_30,compute_30\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_35,code=\"sm_35,compute_35\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_50,code=\"sm_50,compute_50\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_61,code=\"sm_61,compute_61\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_70,code=\"sm_70,compute_70\"
-endif
-ifeq ($(CUDAVER),11)
-  # module load cuda/11.7
-  GENCODE:=$(GENCODE) -gencode=arch=compute_35,code=\"sm_35,compute_35\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_50,code=\"sm_50,compute_50\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_61,code=\"sm_61,compute_61\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_70,code=\"sm_70,compute_70\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_80,code=\"sm_80,compute_80\"
-  GENCODE:=$(GENCODE) -gencode=arch=compute_86,code=\"sm_86,compute_86\"
-endif
+ifeq ($(ENABLE_HIP), YES)
+  # System configuration for HIP/ROCm
+  ROCM_PATH?=/opt/rocm
+  DIRTOOLKIT=${ROCM_PATH}
+  CCFLAGS += -DUSE_HIP -D__HIP_PLATFORM_AMD__ -I$(DIRTOOLKIT)/include
+  
+else
+  # System configuration for CUDA
+  #=============== CUDA toolkit directory (make appropriate for local CUDA installation) ===============
+  ifeq ($(CUDAVER),00)
+    DIRTOOLKIT=/usr/local/cuda
+  endif
+  ifeq ($(CUDAVER),92)
+    DIRTOOLKIT=/exports/opt/NVIDIA/cuda-9.2
+  endif
+  ifeq ($(CUDAVER),11)
+    DIRTOOLKIT=/exports/opt/NVIDIA/cuda-11.7
+  endif
+  ifeq ($(CUDAVER),12)
+    DIRTOOLKIT=/exports/opt/NVIDIA/cuda-12.8
+    # DIRTOOLKIT=/share/modules/CUDA/12.9
+  endif
 
 
+  #=============== Select GPU architectures ===============
+  ifeq ($(CUDAVER),92)
+    # module load cuda/9.2
+    GENCODE:=$(GENCODE) -gencode=arch=compute_30,code=\"sm_30,compute_30\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_35,code=\"sm_35,compute_35\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_61,code=\"sm_61,compute_61\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_70,code=\"sm_70,compute_70\"
+  endif
+  ifeq ($(CUDAVER),11)
+    # module load cuda/11.7
+    GENCODE:=$(GENCODE) -gencode=arch=compute_35,code=\"sm_35,compute_35\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_61,code=\"sm_61,compute_61\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_70,code=\"sm_70,compute_70\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_80,code=\"sm_80,compute_80\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_86,code=\"sm_86,compute_86\"
+  endif
+  ifeq ($(CUDAVER),12)
+    GENCODE:=$(GENCODE) -gencode=arch=compute_80,code=\"sm_80,compute_80\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_86,code=\"sm_86,compute_86\"
+    GENCODE:=$(GENCODE) -gencode=arch=compute_90,code=\"sm_90,compute_90\"
+  endif
+
+endif
 #=============== Files to compile ===============
 OBJXML=JXml.o tinystr.o tinyxml.o tinyxmlerror.o tinyxmlparser.o
 OBJSPHMOTION=JMotion.o JMotionList.o JMotionMov.o JMotionObj.o JMotionPos.o JSphMotion.o
@@ -115,16 +139,43 @@ OBJECTS:=$(OBJECTS) $(OBWAVERZ) $(OBWAVERZCUDA) $(OBCHRONO) $(OBMOORDYN) $(OBINO
 JLIBS=${LIBS_DIRECTORIES}
 
 #=============== GPU Code Compilation ===============
-CCFLAGS := $(CCFLAGS) -I./ -I$(DIRTOOLKIT)/include
-CCLINKFLAGS := $(CCLINKFLAGS) -L$(DIRTOOLKIT)/lib64 -lcudart_static -ldl -lrt
-NCC=nvcc
-ifeq ($(USE_DEBUG), NO)
-  NCCFLAGS+=-c $(GENCODE) -O3 -ccbin $(CC)
-else
-  NCCFLAGS+=-c $(GENCODE) -O0 -ccbin $(CC) -g
-endif
-ifeq ($(USE_FAST_MATH), YES)
-  NCCFLAGS+= -use_fast_math
+ifeq ($(ENABLE_HIP), YES)
+  # Compile config for HIP
+  CCFLAGS := $(CCFLAGS) -I./ -I./hip_resources -I$(DIRTOOLKIT)/include
+  CCLINKFLAGS := $(CCLINKFLAGS) -L$(DIRTOOLKIT)/lib -ldl -lrt
+  NCC=$(DIRTOOLKIT)/bin/hipcc
+  NCCFLAGS+= -DUSE_HIP -I./hip_resources -I$(DIRTOOLKIT)/include -Wno-unused-command-line-argument -Wno-switch  
+
+  # Especify GPU arch (gfx90a MI200 series,  gfx942 MI300 series )
+  GPU_ARCH?=gfx942 
+  NCCFLAGS+= --offload-arch=${GPU_ARCH}
+  NCCFLAGS+= -munsafe-fp-atomics  #Hardware atomics for MI200 series
+
+  ifeq ($(USE_DEBUG), NO)
+    NCCFLAGS+=-c $(GENCODE) -O3
+  else
+    NCCFLAGS+=-c $(GENCODE) -O0 -g
+  endif
+  ifeq ($(USE_FAST_MATH), YES)
+    NCCFLAGS+= -ffast-math
+  endif
+  LINKER=${NCC}
+
+else 
+  # Compile config for CUDA
+  CCFLAGS := $(CCFLAGS) -I./ -I$(DIRTOOLKIT)/include
+  CCLINKFLAGS := $(CCLINKFLAGS) -L$(DIRTOOLKIT)/lib64 -lcudart_static -ldl -lrt
+  NCC=nvcc
+  ifeq ($(USE_DEBUG), NO)
+    NCCFLAGS+=-c $(GENCODE) -O3 -ccbin $(CC)
+  else
+    NCCFLAGS+=-c $(GENCODE) -O0 -ccbin $(CC) -g
+  endif
+  ifeq ($(USE_FAST_MATH), YES)
+    NCCFLAGS+= -use_fast_math
+  endif
+  LINKER=${CC}
+
 endif
 
 all:$(EXECS_DIRECTORY)/$(EXECNAME) 
@@ -137,7 +188,7 @@ else
 endif
 
 $(EXECS_DIRECTORY)/$(EXECNAME):  $(OBJECTS)
-	$(CC) $(OBJECTS) $(CCLINKFLAGS) -o $@ $(JLIBS)
+	$(LINKER) $(OBJECTS) $(CCLINKFLAGS) -o $@ $(JLIBS)
 
 .cpp.o: 
 	$(CC) $(CCFLAGS) $< 

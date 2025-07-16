@@ -34,7 +34,11 @@
 #include "DualSphDef.h"
 #include "JMatrix4.h"
 #ifdef _WITHGPU
+  #ifdef USE_HIP
+  #include "cuda_to_hip.h"
+  #else
   #include <cuda_runtime_api.h>
+  #endif
 #endif
 
 #include <string>

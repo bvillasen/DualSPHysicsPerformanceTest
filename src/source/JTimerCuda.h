@@ -29,7 +29,11 @@
 #ifndef _JTimerCuda_
 #define _JTimerCuda_
 
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 //##############################################################################
 //# JTimerCuda

@@ -22,7 +22,11 @@
 #include "Functions.h"
 #include "FunctionsCuda.h"
 #include <cfloat>
+#ifdef USE_HIP
+#include "cuda_math_constants.h"
+#else
 #include <math_constants.h>
+#endif
 
 namespace cusphinout{
 #include "FunctionsBasic_iker.cu"

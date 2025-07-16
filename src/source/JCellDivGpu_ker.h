@@ -22,7 +22,11 @@
 #define _JCellDivGpu_ker_
 
 #include "DualSphDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 //:#define DG_LimitsCell //-En LimitsCell() comprueba que el resultado sea correcto.
 //:#define DG_LimitsPos //-En LimitsPos() comprueba que el resultado sea correcto.

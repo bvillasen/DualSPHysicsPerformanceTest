@@ -33,7 +33,11 @@
 #define _JRelaxZone_ker_
 
 #include "DualSphDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 #define WAVEBSIZE 256
 

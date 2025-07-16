@@ -22,7 +22,11 @@
 #define _JSphGpu_InOut_iker_
 
 #include "DualSphDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 #define INOUT_RefillAdvanced_MASK 0x01
 #define INOUT_RefillSpFull_MASK 0x02

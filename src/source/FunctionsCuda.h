@@ -37,7 +37,11 @@
 
 #include <string>
 #include <vector>
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 #include "TypesDef.h"
 
 #ifndef Check_CudaErroorFun

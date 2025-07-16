@@ -22,7 +22,11 @@
 #include "Functions.h"
 #include "FunctionsCuda.h"
 #include <float.h>
+#ifdef USE_HIP
+#include "cuda_math_constants.h"
+#else
 #include <math_constants.h>
+#endif
 //:#include "JDgKerPrint.h"
 //:#include "JDgKerPrint_ker.h"
 #include <cstdio>

@@ -21,7 +21,11 @@
 #include "JRelaxZonesGpu.h"
 #ifdef _WITHGPU
   #include "JRelaxZone_ker.h"
+  #ifdef USE_HIP
+  #include "cuda_to_hip.h"
+  #else
   #include <cuda_runtime_api.h>
+  #endif
 #endif
 
 

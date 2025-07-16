@@ -26,7 +26,11 @@
 /// \file FunctionsGeo3d_iker.cu \brief Implements geometry functions for 3D on CUDA.
 
 #include "TypesDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 namespace cugeo{
 

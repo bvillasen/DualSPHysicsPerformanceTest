@@ -20,7 +20,11 @@
 
 #include "JMLPistonsGpu.h"
 #ifdef _WITHGPU
+  #ifdef USE_HIP
+  #include "cuda_to_hip.h"
+  #else
   #include <cuda_runtime_api.h>
+  #endif
 #endif
 
 using namespace std;

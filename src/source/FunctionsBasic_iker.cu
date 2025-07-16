@@ -25,7 +25,11 @@
 /// \file FunctionsBasic_iker.cu \brief Implements basic functions for CUDA files.
 
 #include "TypesDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 #ifndef SPHBSIZE
   #define SPHBSIZE 256  //-CUDA blocksize by default.

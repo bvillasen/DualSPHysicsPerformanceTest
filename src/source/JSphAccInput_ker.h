@@ -28,7 +28,11 @@
 #define _JSphAccInput_ker_
 
 #include "DualSphDef.h"
+#ifdef USE_HIP
+#include "cuda_to_hip.h"
+#else
 #include <cuda_runtime_api.h>
+#endif
 
 /// Implements a set of functions and CUDA kernels for external forces (JSphAccInput) on GPU.
 namespace cuaccin{
