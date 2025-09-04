@@ -12,6 +12,25 @@ This repository contains the source code of **DualSPHysics v5.0.112** along with
 
 This benchmarking framework and the relative performance values are based on the methodology and results presented in <a href="https://rdcu.be/chIPC" target="_blank">Domínguez et al. (2022)</a>.
 
+# How to Build for AMD GPUs
+
+```bash
+git clone -b hipifly https://github.com/bvillasen/DualSPHysicsPerformanceTest.git
+cd DualSPHysicsPerformanceTest/src/source
+module load rocm
+export BUILD_AMD=1
+GPU_ARCH=gfx942 make -j
+```
+
+# How to Run the Test
+
+```bash
+cd test_linux/example_95M
+bash generate_initial_conditions.sh 
+bash run_test.sh
+```
+
+
 # Latest GPU Benchmark Comparison
 
 The following graph shows the latest comparative performance evaluation of NVIDIA GPU cards. The results are presented as speedup relative to Tesla K20 (further details of the test case in <a href="https://rdcu.be/chIPC" target="_blank">Domínguez et al. (2022)</a>).
